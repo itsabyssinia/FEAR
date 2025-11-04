@@ -1,4 +1,4 @@
-# im doing egd (chargenet) -> gd(analytic) -> egd
+#  egd (chargenet) -> gd(analytic) -> egd
 import os, time, math, csv
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ inputs = {
     "supercell": (2, 2, 2),
     "out_dir": "outputs",
 
-    "cycles": 300,
+    "cycles": 1,
 
     # egd
     "egd_steps": 50,
@@ -277,3 +277,6 @@ if __name__ == "__main__":
 
     print("heloooooo")
     print(f"saved: {final_plot}")
+    r1, g1 = solver.ASEGr(crystal)
+    r2, g2 = solver.ASEGr(glass)
+    print(np.mean(np.abs(g1 - g2)))
