@@ -22,10 +22,10 @@ inputs = {
     "crystal": "SiO2_mp-6930_computed.cif",
     "glass": "FinalGlass.data",
     "target_format": "lammps-data",
-    "supercell": (2, 2, 2),
+    "supercell": (3, 3, 3),
     "out_dir": "outputs",
 
-    "cycles": 1,
+    "cycles": 10,
 
     # egd
     "egd_steps": 50,
