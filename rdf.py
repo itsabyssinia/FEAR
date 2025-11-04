@@ -222,7 +222,7 @@ class grSolver:
         plt.plot(r, rdf_init, label="initial")
         plt.plot(r, rdf_target, label="target", linestyle="--")
         plt.plot(r, rdf_curr, label="current", linestyle="-.")
-        plt.xlabel("r (Å)")
+        plt.xlabel("r")
         plt.ylabel("g(r)")
         plt.legend()
         plt.tight_layout()
