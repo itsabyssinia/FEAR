@@ -232,16 +232,11 @@ class grSolver:
     # this is my main loop: EGD -> RDF-GD -> EGD
     def solve(self):
         cfg = self.cfg
-        out = cfg["out_dir"]
 
         a = self.atoms.copy()
         r, rdf_init, _ = self.calculate_gr_and_grad(a)
         loss_trace = [self.loss(a.get_positions())]
         t_start = time.time()
-
-        log_path = os.path.join(out, "logs", "run_log.csv")
-        with open(log_path, "w", newline="") as f:
-            csv.writer(f).writerow(["cycle", "loss"])
 
         for cycle in range(1, cfg["cycles"] + 1):
             t0 = time.time()
@@ -252,25 +247,10 @@ class grSolver:
             a = self.rdf_gradient_updates(a)
             a = self.energyMinimization(a)
 
-            # here's measure after full egd-gd-egd
             L = self.loss(a.get_positions())
             loss_trace.append(L)
 
-            if (cycle % cfg["plot_every_cycles"] == 0) or (cycle == 1):
-                _, rdf_curr, _ = self.calculate_gr_and_grad(a)
-                self.save_rdf_plot(
-                    r, rdf_init, self.target[1], rdf_curr,
-                    os.path.join(out, "plots", f"rdf_cycle_{cycle:04d}.png")
-                )
-            if (cycle % cfg["save_every_cycles"] == 0) or (cycle == cfg["cycles"]):
-                write(os.path.join(out, "checkpoints", f"cycle_{cycle:04d}.xyz"), a)
-
-        
-            with open(log_path, "a", newline="") as f:
-                csv.writer(f).writerow([cycle, f"{L:.8e}"])
-
             print(f"cycle {cycle}/{cfg['cycles']} | loss={L:.8e} | dt={time.time()-t0:.1f}s")
-
 
             if len(loss_trace) >= cfg["ew"]:
                 recent = np.array(loss_trace[-cfg["ew"]:])
@@ -278,33 +258,22 @@ class grSolver:
                     print(f"early stop at cycle {cycle}: loss plateau (std < {cfg['et']}).")
                     break
 
-
-        np.savetxt(os.path.join(out, "logs", "loss_trace.csv"), np.array(loss_trace), delimiter=",")
-        write(os.path.join(out, "checkpoints", "final_structure.xyz"), a)
-
-        print(f"[ total time: {(time.time() - t_start)/3600.0:.2f} h ]")
         return a, loss_trace
 
 
 if __name__ == "__main__":
-    ensure_dirs(inputs["out_dir"])
-
     crystal = read(inputs["crystal"]) * inputs["supercell"]
     glass = read(inputs["glass"], format=inputs["target_format"])
 
-
     calc = CHGNetCalculator() if USE_CHGNET else EMT()
-
 
     solver = grSolver(crystal, glass, inputs, calc)
     final_atoms, loss_trace = solver.solve()
 
     r, rdf_init, _ = solver.calculate_gr_and_grad(read(inputs["crystal"]) * inputs["supercell"])
     _, rdf_final, _ = solver.calculate_gr_and_grad(final_atoms)
-    final_plot = os.path.join(inputs["out_dir"], "plots", "rdf_final.png")
+    final_plot = "rdf_final.png"
     solver.save_rdf_plot(r, rdf_init, solver.target[1], rdf_final, final_plot)
 
     print("heloooooo")
-    print(f"logs:   {os.path.join(inputs['out_dir'], 'logs')}")
-    print(f"plots:  {os.path.join(inputs['out_dir'], 'plots')}")
-    print(f"ckpts:  {os.path.join(inputs['out_dir'], 'checkpoints')}")
+    print(f"saved: {final_plot}")
